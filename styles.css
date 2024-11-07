@@ -1,0 +1,221 @@
+
+body {
+    margin: 0;
+    font-family: "PT+Sans";
+}
+
+/* Top Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #F5CAC3;
+    padding: 10px;
+}
+
+.navbar .left, .navbar .right {
+    display: flex;
+    align-items: center;
+}
+
+.navbar input[type="text"] {
+    padding: 5px;
+    margin-right: 10px;
+    width: 150px;
+    border-radius:8px;
+}
+
+.navbar .status-icon {
+    width: 30px;
+    height: 30px;
+    background-color: #F28482;
+    border-radius: 50%;
+    margin-left: 10px;
+}
+
+.navbar .help-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    background-color: #F28482;
+    border-radius: 50%;
+    margin-left: 10px;
+}
+
+.navbar .sign-out-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    height: 30px;
+    background-color: #F28482;
+    border-radius: 8px;
+    margin-left: 10px;
+}
+
+/* Main layout */
+.container {
+    display: flex;
+    height: 700px; 
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); 
+    border-radius: 8px;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 15%;
+    background-color: #F7EDE2;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sidebar .button {
+    width: 80%;
+    background-color: #f8f3ed;
+    padding: 10px;
+    margin-bottom: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: border 0.3s ease;
+    border-radius: 8px;
+}
+
+.sidebar .button:hover {
+    border: 2px solid #84A59D;
+}
+
+.sidebar .friends {
+    display: none;
+}
+
+/* Right Content Area */
+.content-area {
+    width: 100%;
+    display: flex;
+}
+
+/* DM or Server Section */
+.section {
+    width: 15%;
+    background-color: #84A59D;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.section .item {
+    background-color: #9cbcb4;
+    width: 80%;
+    padding: 10px;
+    margin-bottom: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: border 0.3s ease;
+    border-radius: 8px;
+}
+
+.section .item:hover {
+    border: 2px solid #F7EDE2;
+}
+
+.section.friends-visible .friends {
+    display: block;
+}
+
+/* Main Content */
+.main-content {
+    flex-grow: 1;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.chat-window {
+    flex-grow: 1;
+    border: 1px solid #F7EDE2;
+    padding: 10px;
+    margin-bottom: 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; 
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.chat-message {
+    display: flex;
+    align-items: center
+}
+
+.chat-message img{
+    display: none;
+}
+
+/* Common styles for all messages */
+.message {
+    max-width: 60%;
+    padding: 10px;
+    border-radius: 20px;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 5px;
+    display: inline-block;
+    word-wrap: break-word; /* Ensures long words wrap within the bubble */
+    white-space: normal; /* Preserves spaces and handles wrapping for longer text */
+    overflow-wrap: break-word; 
+    overflow: hidden;
+}
+
+/* Styles for the user's messages (aligned right) */
+.message.user {
+    background-color: #9cbcb4; 
+    color: white;
+    align-self: flex-end;
+    text-align: right;
+}
+
+/* Styles for the other person's messages (aligned left) */
+.message.other {
+    background-color: #333333; 
+    color: white;
+    align-self: flex-start;
+    text-align: left;
+}
+
+
+/* Message input area */
+.message-input {
+    display: flex;
+    align-items: center;
+}
+
+.message-input input[type="text"] {
+    flex-grow: 1;
+    padding: 10px;
+    margin-right: 10px;
+    border: 1px solid #F7EDE2;
+}
+
+.message-input .emoji-button,
+.message-input .add-file-button,
+.message-input .send-button {
+    width: 30px;
+    height: 30px;
+    background-color: #F7EDE2;
+    margin-right: 10px;
+    cursor: pointer;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    font-size: 16px;
+}

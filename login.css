@@ -1,0 +1,103 @@
+/* for body in general*/
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f0f0; 
+  margin: 0;
+  display: flex;
+  justify-content: center; 
+  align-items: center; 
+  height: 100vh; 
+}
+
+/* Form container styling for sign-in and sign-up */
+#sign-up-container, #sign-in-container {
+  background-color: #ffffff; 
+  padding: 20px; 
+  border-radius: 8px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); 
+  max-width: 400px; 
+  width: 100%; 
+  text-align: center; 
+}
+
+/* Heading */
+h2 {
+  color: #333333; 
+  margin-bottom: 20px; 
+}
+
+/* Form */
+form {
+  display: flex;
+  flex-direction: column; 
+  align-items: center; 
+}
+
+/* Input text field */
+input {
+  width: 100%; 
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  font-size: 16px; 
+  box-sizing: border-box; 
+}
+
+/* Button */
+button {
+  width: 100%;
+  padding: 10px; 
+  background-color: #84A59D;
+  color: white; 
+  border: none; 
+  border-radius: 4px; 
+  cursor: pointer;
+  font-size: 16px; 
+}
+
+/* Button hover effect */
+button:hover {
+  background-color: #45a049; 
+}
+
+/* Error message styling */
+#error-message {
+  color: red; 
+  margin-top: 10px; 
+  font-size: 14px; 
+}
+
+/* Links (Sign up and forgot password) */
+a {
+  color: #007BFF; 
+  /*remove the underline*/
+  text-decoration: none;
+}
+
+a:hover {
+  /* Underline on hover */
+  text-decoration: underline; 
+}
+
+/* Authenticated message container */
+#auth-message {
+  background-color: #ffffff;
+  padding: 20px; 
+  border-radius: 8px; 
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); 
+  max-width: 400px; 
+  width: 100%; 
+  text-align: center;
+}
+
+button#sign-out-button, button#continue-button {
+  margin-top: 10px; 
+  width: 100%; 
+  padding: 10px; 
+  background-color: #f44336;
+}
+
+button#sign-out-button:hover {
+  background-color: #d32f2f;
+}
