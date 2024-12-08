@@ -55,18 +55,23 @@ signUpForm.addEventListener('submit', async (e) => {
     return;
   }
 
+  let userCredential;
+
   //use the firebase function to create a new user
   try {
-    await createUserWithEmailAndPassword(auth, email, password);
+    userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
   } catch (error) {
     console.error('Error signing up:', error.message);
     errorMessage.textContent = error.message;
   }
 
+  const uid = userCredential.user.uid
   // Add a new document with a generated id.
   const docRef = await addDoc(collection(db, "users"), {
     name: name,
-    email: email
+    email: email,
+    uid: uid
   });
 
   console.log("Document written with ID: ", docRef.id);
@@ -74,8 +79,7 @@ signUpForm.addEventListener('submit', async (e) => {
   localStorage.setItem("username", email);
   console.log("Username stored in localStorage:", localStorage.getItem("username"));
   
-  // Send verification email
-  //TODO check if this actually works
+
   
   errorMessage.textContent = "";
 
@@ -108,20 +112,6 @@ signInForm.addEventListener('submit', async (e) => {
 
   console.log('User signed in:', userCredential.user);
   window.location.href = 'index.html'; 
-  // // Check if email is verified
-  // if (userCredential.user.emailVerified) {
-  //   // Sign-in successful.
-  //   console.log('User signed in:', userCredential.user);
-  //   window.location.href = 'index.html'; 
-
-
-  // } else {
-  //   //TODO this might not be working yet
-  //   errorMessage.textContent = 'Please verify your email before signing in.';
-  //   // Sign out the user
-  //   await signOut();
-  // }
-
 
 });
 

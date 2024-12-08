@@ -219,3 +219,12 @@ body {
     border-radius: 50%;
     font-size: 16px;
 }
+
+.add-chat-button {
+    background-color: #f8f3ed;
+    padding: 5px;
+    text-align: center;
+    cursor: pointer;
+    transition: border 0.3s ease;
+    border-radius: 8px;
+}
