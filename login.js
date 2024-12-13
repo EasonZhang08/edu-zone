@@ -73,7 +73,7 @@ signUpForm.addEventListener('submit', async (e) => {
     email: email,
     uid: uid
   });
-
+  
   console.log("Document written with ID: ", docRef.id);
 
   localStorage.setItem("username", email);

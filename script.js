@@ -7,10 +7,11 @@ console.log("Current local user:", email);
 const addChatButton = document.getElementById('add-chat-button');
 const addChatInput = document.getElementById('add-chat-input');
 const sectionContent = document.getElementById('sectionContent');
+let chatId = null;
 
 
 document.addEventListener("DOMContentLoaded", async () => {
-    
+    const targetEmail = addChatInput.value.trim();
     console.log(collection(db, "users"))
     const a = await getDocs(collection(db, "users"));
     console.log(a);
@@ -19,7 +20,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
     const chatCollectionRef = collection(db, "chats");
-    const chatDocRef = doc(chatCollectionRef, await findChatId(auth.currentUser.uid));
+    const chatId = await findChatId(auth.currentUser.uid, await getUidByEmail(targetEmail));
+    if (!chatId) {
+        console.error("Chat ID is null or undefined. Cannot proceed.");
+        return; // Exit the function early if no chat ID is found
+    }
+
+    const chatDocRef = doc(chatCollectionRef);
+    //const chatDocRef = doc(chatCollectionRef, await findChatId(auth.currentUser.uid));
     const messagesSubcollectionRef = collection(chatDocRef, "messages");
     //const messageDocRef = doc(messagesSubcollectionRef);
 
@@ -32,7 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     //this button is to add a new chat
     addChatButton.addEventListener('click', async function(){
-        const targetEmail = addChatInput.value.trim();
+        
         const UserSubcollectionRef = collection(chatDocRef, "users");
         await setDoc(chatDocRef, { name: "Chat Name" });
         const firstUserRef = doc(UserSubcollectionRef, auth.currentUser.uid);
@@ -49,10 +57,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Add the other user to users subcollection
         await setDoc(secondUserRef, { uid: secondUserUid });
 
-        updateFriendDisplay({
-            uidFirstUser: auth.currentUser.uid,
-            uidSecondUser: secondUserUid
-        });
+        updateFriendDisplay();
 
     });
 
@@ -141,7 +146,7 @@ signOutButton.addEventListener('click', async () => {
 });
 
 
-async function updateFriendDisplay() {
+async function updateFriendDisplay(chatId) {
     // Real-time listener for the "chats" collection
     const chatsRef = collection(db, "chats");
     const unsubscribe = onSnapshot(chatsRef, async (snapshot) => {
@@ -170,6 +175,7 @@ async function updateFriendDisplay() {
                 // Add the user's name to the UI
                 const div = document.createElement("div");
                 div.innerHTML = otherUserName;
+                chatButton.setAttribute("data-chat-id", chatId);
                 div.classList.add("item", "friends");
                 sectionContent.appendChild(div);
             }
@@ -179,27 +185,35 @@ async function updateFriendDisplay() {
     return unsubscribe; // Call this to stop listening if needed
 }
 
-async function findChatId(currentUserId){
+function updateMessageDisplay(){
+
+}
+
+async function findChatId(currentUserId, targetUserId){
     const chatCollectionRef = collection(db, "chats");
+    const querySnapshot = await getDocs(chatCollectionRef);
+    await console.log("Target user UID:", targetUserId);
+    for (const chatDoc of querySnapshot.docs) {
+        const chatId = chatDoc.id;
+        const usersSubcollectionRef = collection(chatDoc.ref, "users");
 
-    // Query for a chat containing both users
-    const q = query(
-        chatCollectionRef,
-        where("userIds", "array-contains", currentUserId)
-    );
+        // Fetch all user documents within the users subcollection
+        const usersSnapshot = await getDocs(usersSubcollectionRef);
 
-    const querySnapshot = await getDocs(q);
-
-    // Look for a chat that includes both users
-    for (const doc of querySnapshot.docs) {
-        const chatData = doc.data();
-        if (chatData.userIds.includes(targetUserId)) {
-            // Return the existing chat ID
-            console.log("Found existing chat ID:", doc.id);
-            return doc.id;
+        const userUids = [];
+        usersSnapshot.forEach((userDoc) => {
+            userUids.push(userDoc.data().uid);
+        });
+        
+        // Check if both users exist in this chat's users subcollection
+        if (userUids.includes(currentUserId) && userUids.includes(targetUserId)) {
+            console.log("Found existing chat ID:", chatId);
+            return chatId;
         }
     }
-    //return null;
+
+    console.error("No matching chat found for user:", currentUserId);
+    return null;
 }
 
 
