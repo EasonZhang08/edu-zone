@@ -185,9 +185,6 @@ async function updateFriendDisplay(chatId) {
     return unsubscribe; // Call this to stop listening if needed
 }
 
-function updateMessageDisplay(){
-
-}
 
 async function findChatId(currentUserId, targetUserId){
     const chatCollectionRef = collection(db, "chats");
