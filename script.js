@@ -7,11 +7,14 @@ console.log("Current local user:", email);
 const addChatButton = document.getElementById('add-chat-button');
 const addChatInput = document.getElementById('add-chat-input');
 const sectionContent = document.getElementById('sectionContent');
+const chatWindow = document.getElementById('chatWindow');
+//get the input box
+const messageInput = document.getElementById('messageInput');
 let chatId = null;
 
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const targetEmail = addChatInput.value.trim();
+    
     console.log(collection(db, "users"))
     const a = await getDocs(collection(db, "users"));
     console.log(a);
@@ -20,7 +23,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
     const chatCollectionRef = collection(db, "chats");
-    const chatId = await findChatId(auth.currentUser.uid, await getUidByEmail(targetEmail));
+
+    const chatId = await findChatId(auth.currentUser.uid);
     if (!chatId) {
         console.error("Chat ID is null or undefined. Cannot proceed.");
         return; // Exit the function early if no chat ID is found
@@ -40,7 +44,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     //this button is to add a new chat
     addChatButton.addEventListener('click', async function(){
-        
+        const targetEmail = addChatInput.value.trim();
         const UserSubcollectionRef = collection(chatDocRef, "users");
         await setDoc(chatDocRef, { name: "Chat Name" });
         const firstUserRef = doc(UserSubcollectionRef, auth.currentUser.uid);
@@ -62,22 +66,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     async function sendMessage() {
-        //get the input box
-        const messageInput = document.getElementById('messageInput');
-        //get the chat window
-        const chatWindow = document.getElementById('chatWindow');
-        
+ 
         //make sure it's not empty
         if (messageInput.value.trim() !== "") {
-            //create the message div
-            const message = document.createElement('div');
-            message.classList.add('message', 'user');
-            //add the message content
-            message.textContent = messageInput.value;
-
-            const placeholders = document.querySelectorAll('.placeholder');
-            placeholders.forEach(placeholder => placeholder.remove());
-
             //const messagesRef = collection(db, "chats", auth.currentUser.id, "messages")
 
             //messagesSubcollectionRef
@@ -91,14 +82,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             console.log("Document written with ID: ", docRef.id);
 
             chatWindow.appendChild(message);
-
-
-
             // Clear the input
             messageInput.value = "";  
             // Scroll to the bottom
-            chatWindow.scrollTop = chatWindow.scrollHeight;  
-            
+            chatWindow.scrollTop = chatWindow.scrollHeight;   
         }
     }
 
@@ -173,11 +160,11 @@ async function updateFriendDisplay(chatId) {
                 const otherUserName = await getNameByUid(otherUserUid);
 
                 // Add the user's name to the UI
-                const div = document.createElement("div");
-                div.innerHTML = otherUserName;
-                chatButton.setAttribute("data-chat-id", chatId);
-                div.classList.add("item", "friends");
-                sectionContent.appendChild(div);
+                const button = document.createElement("button");
+                button.innerHTML = otherUserName;
+                button.setAttribute("data-chat-id", chatId);
+                button.classList.add("item", "friends");
+                sectionContent.appendChild(button);
             }
         });
     });
@@ -185,8 +172,33 @@ async function updateFriendDisplay(chatId) {
     return unsubscribe; // Call this to stop listening if needed
 }
 
+async function updateMessages(chatId){
+    const messagesCollection = collection(db, `chats/${chatId}/messages`);
+    try {
+        const querySnapshot = await getDocs(messagesCollection);
+        querySnapshot.forEach((doc) => {
+          console.log("Message Content:", doc.content);
+          
+        });
+    } catch (error) {
+        console.error("Error fetching messages:", error);
+    }
 
-async function findChatId(currentUserId, targetUserId){
+    // //create the message div
+    // const message = document.createElement('div');
+    // message.classList.add('message', 'user');
+    // //add the message content
+    // message.textContent = messageInput.value;
+
+    // const placeholders = document.querySelectorAll('.placeholder');
+    // placeholders.forEach(placeholder => placeholder.remove());
+    // chatWindow.appendChild(message);
+
+    // // Scroll to the bottom
+    // chatWindow.scrollTop = chatWindow.scrollHeight
+}
+
+async function findChatId(currentUserId, targetUserId = null){
     const chatCollectionRef = collection(db, "chats");
     const querySnapshot = await getDocs(chatCollectionRef);
     await console.log("Target user UID:", targetUserId);
@@ -201,12 +213,13 @@ async function findChatId(currentUserId, targetUserId){
         usersSnapshot.forEach((userDoc) => {
             userUids.push(userDoc.data().uid);
         });
-        
+        console.log(userUids);
+        console.log(currentUserId + "" + targetUserId);
         // Check if both users exist in this chat's users subcollection
-        if (userUids.includes(currentUserId) && userUids.includes(targetUserId)) {
-            console.log("Found existing chat ID:", chatId);
+        if (userUids.includes(currentUserId) && (targetUserId == null || userUids.includes(targetUserId))){
             return chatId;
         }
+        
     }
 
     console.error("No matching chat found for user:", currentUserId);
