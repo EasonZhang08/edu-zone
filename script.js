@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return; // Exit the function early if no chat ID is found
     }
 
-    const chatDocRef = doc(chatCollectionRef);
+    const chatDocRef = doc(chatCollectionRef, chatId);
     //const chatDocRef = doc(chatCollectionRef, await findChatId(auth.currentUser.uid));
     const messagesSubcollectionRef = collection(chatDocRef, "messages");
     //const messageDocRef = doc(messagesSubcollectionRef);
@@ -41,6 +41,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         displayNameOnScreen.textContent = "User not found"; // Fallback text
     }
     updateFriendDisplay();
+    updateAllMessages(chatId);
 
     //this button is to add a new chat
     addChatButton.addEventListener('click', async function(){
@@ -79,13 +80,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 uid: auth.currentUser.uid,
             });
 
-            console.log("Document written with ID: ", docRef.id);
-
-            chatWindow.appendChild(message);
+            showMessage(messageInput.value);
             // Clear the input
             messageInput.value = "";  
-            // Scroll to the bottom
-            chatWindow.scrollTop = chatWindow.scrollHeight;   
         }
     }
 
@@ -133,7 +130,7 @@ signOutButton.addEventListener('click', async () => {
 });
 
 
-async function updateFriendDisplay(chatId) {
+async function updateFriendDisplay() {
     // Real-time listener for the "chats" collection
     const chatsRef = collection(db, "chats");
     const unsubscribe = onSnapshot(chatsRef, async (snapshot) => {
@@ -144,7 +141,7 @@ async function updateFriendDisplay(chatId) {
             const chatData = doc.data();
             const usersRef = collection(doc.ref, "users");
             const usersSnapshot = await getDocs(usersRef);
-
+            const chatId = doc.id;
             let otherUserUid = null;
 
             // Check for current user and find the other user's UID
@@ -172,30 +169,20 @@ async function updateFriendDisplay(chatId) {
     return unsubscribe; // Call this to stop listening if needed
 }
 
-async function updateMessages(chatId){
+async function updateAllMessages(chatId){
     const messagesCollection = collection(db, `chats/${chatId}/messages`);
     try {
         const querySnapshot = await getDocs(messagesCollection);
         querySnapshot.forEach((doc) => {
-          console.log("Message Content:", doc.content);
-          
+            console.log(doc);
+            console.log("Message Content:", doc.data);
+            showMessage(doc.data().content);
         });
     } catch (error) {
         console.error("Error fetching messages:", error);
     }
 
-    // //create the message div
-    // const message = document.createElement('div');
-    // message.classList.add('message', 'user');
-    // //add the message content
-    // message.textContent = messageInput.value;
-
-    // const placeholders = document.querySelectorAll('.placeholder');
-    // placeholders.forEach(placeholder => placeholder.remove());
-    // chatWindow.appendChild(message);
-
-    // // Scroll to the bottom
-    // chatWindow.scrollTop = chatWindow.scrollHeight
+    
 }
 
 async function findChatId(currentUserId, targetUserId = null){
@@ -283,4 +270,20 @@ async function getNameByUid(uid) {
     } else {
         console.log("No user found with the given uid.");
     }
+}
+
+function showMessage(text){
+    //create the message div
+    const message = document.createElement('div');
+    message.classList.add('message', 'user');
+    //add the message content
+    message.textContent = text;
+
+    const placeholders = document.querySelectorAll('.placeholder');
+    placeholders.forEach(placeholder => placeholder.remove());
+    
+    chatWindow.appendChild(message);
+    
+    // Scroll to the bottom
+    chatWindow.scrollTop = chatWindow.scrollHeight;  
 }
