@@ -148,6 +148,7 @@ body {
     gap: 10px; 
     width: 100%;
     box-sizing: border-box;
+    overflow-y: auto
 }
 
 .chat-message {
@@ -171,7 +172,7 @@ body {
     word-wrap: break-word; /* Ensures long words wrap within the bubble */
     white-space: normal; /* Preserves spaces and handles wrapping for longer text */
     overflow-wrap: break-word; 
-    overflow: hidden;
+    
 }
 
 /* Styles for the user's messages (aligned right) */

@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { signOut } from "firebase/auth";
-import { collection, getDocs, getFirestore, limit, query, where, setDoc, doc, onSnapshot, addDoc, serverTimestamp} from "firebase/firestore";
+import { collection, getDocs, getFirestore, limit, query, where, setDoc, doc, onSnapshot, addDoc, serverTimestamp, orderBy} from "firebase/firestore";
 import { auth, db } from "./firebase";
 const email = localStorage.getItem("username");
 console.log("Current local user:", email);
@@ -10,7 +10,7 @@ const sectionContent = document.getElementById('sectionContent');
 const chatWindow = document.getElementById('chatWindow');
 //get the input box
 const messageInput = document.getElementById('messageInput');
-let chatId = null;
+
 
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 uid: auth.currentUser.uid,
             });
 
-            showMessage(messageInput.value);
+            showMessage(messageInput.value, auth.currentUser.uid);
             // Clear the input
             messageInput.value = "";  
         }
@@ -171,12 +171,14 @@ async function updateFriendDisplay() {
 
 async function updateAllMessages(chatId){
     const messagesCollection = collection(db, `chats/${chatId}/messages`);
+    const messagesQuery = query(messagesCollection, orderBy("timestamp"));
     try {
-        const querySnapshot = await getDocs(messagesCollection);
+        const querySnapshot = await getDocs(messagesQuery);
+        
         querySnapshot.forEach((doc) => {
             console.log(doc);
             console.log("Message Content:", doc.data);
-            showMessage(doc.data().content);
+            showMessage(doc.data().content, doc.data().uid);
         });
     } catch (error) {
         console.error("Error fetching messages:", error);
@@ -272,10 +274,15 @@ async function getNameByUid(uid) {
     }
 }
 
-function showMessage(text){
+function showMessage(text, uid){
     //create the message div
     const message = document.createElement('div');
-    message.classList.add('message', 'user');
+    message.classList.add('message');
+    if (uid === auth.currentUser.uid){
+        message.classList.add('user');
+    } else {
+        message.classList.add('other');
+    }
     //add the message content
     message.textContent = text;
 
