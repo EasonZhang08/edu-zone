@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { collection, addDoc } from "firebase/firestore"; 
 import { auth, db } from "./firebase";
 
@@ -9,7 +9,8 @@ const linkToSignIn = document.getElementById('link-to-sign-in');
 const linkToSignUp = document.getElementById('link-to-sign-up');
 const signUpForm = document.getElementById('sign-up-form');
 const signInForm = document.getElementById('sign-in-form');
-const errorMessage = document.getElementById('error-message');
+const errorMessageSignUp = document.getElementById('error-message-sign-up');
+const errorMessageSignIn = document.getElementById('error-message-sign-in');
 const forgotPasswordLink = document.getElementById('forgot-password-link');
 const authMessage = document.getElementById('auth-message');
 const continueButton = document.getElementById('continue-button');
@@ -23,7 +24,7 @@ linkToSignIn.addEventListener('click', (e) => {
   signUpContainer.style.display = 'none';
   //show sign in form
   signInContainer.style.display = 'block';
-  errorMessage.textContent = '';
+  errorMessageSignIn.textContent = '';
 });
 
 linkToSignUp.addEventListener('click', (e) => {
@@ -31,7 +32,7 @@ linkToSignUp.addEventListener('click', (e) => {
   e.preventDefault();
   signInContainer.style.display = 'none';
   signUpContainer.style.display = 'block';
-  errorMessage.textContent = '';
+  errorMessageSignUp.textContent = '';
 });
 
 // Password validation function
@@ -51,7 +52,7 @@ signUpForm.addEventListener('submit', async (e) => {
   // Password validation
   //must be at least 6 characters
   if (!isValidPassword(password)) {
-    errorMessage.textContent = 'Password must be at least 6 characters.';
+    errorMessageSignUp.textContent = 'Password must be at least 6 characters.';
     return;
   }
 
@@ -63,7 +64,7 @@ signUpForm.addEventListener('submit', async (e) => {
 
   } catch (error) {
     console.error('Error signing up:', error.message);
-    errorMessage.textContent = error.message;
+    errorMessageSignUp.textContent = error.message;
   }
 
   const uid = userCredential.user.uid
@@ -81,7 +82,7 @@ signUpForm.addEventListener('submit', async (e) => {
   
 
   
-  errorMessage.textContent = "";
+  errorMessageSignUp.textContent = "";
 
 
     
@@ -101,11 +102,11 @@ signInForm.addEventListener('submit', async (e) => {
   } catch(error){
     console.error('Error signing in:', error.message);
     if (error.code === 'auth/user-not-found') {
-      errorMessage.textContent = 'No account found with this email.';
+      errorMessageSignIn.textContent = 'No account found with this email.';
     } else if (error.code === 'auth/wrong-password') {
-      errorMessage.textContent = 'Incorrect password.';
+      errorMessageSignIn.textContent = 'Incorrect password.';
     } else {
-      errorMessage.textContent = error.message;
+      errorMessageSignIn.textContent = error.message;
     }
   }
 
@@ -126,7 +127,7 @@ forgotPasswordLink.addEventListener('click', async (e) => {
       await sendPasswordResetEmail(auth, email)
     } catch (error) {
       console.error('Error sending password reset email:', error.message);
-        errorMessage.textContent = error.message;
+      errorMessageSignIn.textContent = error.message;
     }
     
     alert('Password reset email sent!');

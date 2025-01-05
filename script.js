@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { signOut } from "firebase/auth";
-import { collection, getDocs, getFirestore, limit, query, where, setDoc, doc, onSnapshot, addDoc, serverTimestamp, orderBy} from "firebase/firestore";
+import { collection, getDocs, limit, query, where, setDoc, doc, onSnapshot, addDoc, serverTimestamp, orderBy, getDoc} from "firebase/firestore";
 import { auth, db } from "./firebase";
 const email = localStorage.getItem("username");
 console.log("Current local user:", email);
@@ -10,7 +10,7 @@ const sectionContent = document.getElementById('sectionContent');
 const chatWindow = document.getElementById('chatWindow');
 //get the input box
 const messageInput = document.getElementById('messageInput');
-
+let selectedChatRef = null;
 
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -20,72 +20,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log(a);
     const displayNameOnScreen = document.getElementById('display-name');
     const name = await getNameByEmail(email);
-    const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
     const chatCollectionRef = collection(db, "chats");
-
-    const chatId = await findChatId(auth.currentUser.uid);
-    if (!chatId) {
-        console.error("Chat ID is null or undefined. Cannot proceed.");
-        return; // Exit the function early if no chat ID is found
-    }
-
-    const chatDocRef = doc(chatCollectionRef, chatId);
-    //const chatDocRef = doc(chatCollectionRef, await findChatId(auth.currentUser.uid));
-    const messagesSubcollectionRef = collection(chatDocRef, "messages");
-    //const messageDocRef = doc(messagesSubcollectionRef);
+    const chatDocs = await getDocs(chatCollectionRef);
 
     if (name) {
         displayNameOnScreen.textContent = name; // Set name only if it was found
     } else {
         displayNameOnScreen.textContent = "User not found"; // Fallback text
     }
-    updateFriendDisplay();
-    updateAllMessages(chatId);
-
-    //this button is to add a new chat
-    addChatButton.addEventListener('click', async function(){
-        const targetEmail = addChatInput.value.trim();
-        const UserSubcollectionRef = collection(chatDocRef, "users");
-        await setDoc(chatDocRef, { name: "Chat Name" });
-        const firstUserRef = doc(UserSubcollectionRef, auth.currentUser.uid);
-        const secondUserUid = await getUidByEmail(targetEmail);
-        if (!secondUserUid) {
-            console.error("No user found with the provided email.");
-            return;
-        }
-        const secondUserRef = doc(UserSubcollectionRef, secondUserUid);
-
-        // Add current user to users subcollection
-        await setDoc(firstUserRef, { uid: auth.currentUser.uid });
-
-        // Add the other user to users subcollection
-        await setDoc(secondUserRef, { uid: secondUserUid });
-
-        updateFriendDisplay();
-
-    });
-
-    async function sendMessage() {
- 
-        //make sure it's not empty
-        if (messageInput.value.trim() !== "") {
-            //const messagesRef = collection(db, "chats", auth.currentUser.id, "messages")
-
-            //messagesSubcollectionRef
-            //messageDocRef
-            const docRef = await addDoc(messagesSubcollectionRef, {
-                content: messageInput.value,
-                timestamp: serverTimestamp(),
-                uid: auth.currentUser.uid,
-            });
-
-            showMessage(messageInput.value, auth.currentUser.uid);
-            // Clear the input
-            messageInput.value = "";  
-        }
-    }
-
+    
     sendButton.addEventListener('click', sendMessage);
 
     //triggers sendMessage when the user enters
@@ -94,8 +38,75 @@ document.addEventListener("DOMContentLoaded", async () => {
             sendMessage();
         }
     });
+    
+    const chatId = await findChatId(auth.currentUser.uid);
+    if (!chatId) {
+        console.error("Chat ID is null or undefined. Cannot proceed.");
+        return; // Exit the function early if no chat ID is found
+    }
 
+    await updateFriendDisplay();
+    const chatUpdateFunc = switchChat(chatId);
+    await chatUpdateFunc();
+  
+
+    
 });
+
+async function sendMessage() {
+    if (selectedChatRef === null){
+        return;
+    }
+    const messageCollectionRef = collection(selectedChatRef, "messages");
+    //make sure it's not empty
+    if (messageInput.value.trim() !== "") {
+        
+        const docRef = await addDoc(messageCollectionRef, {
+            content: messageInput.value,
+            timestamp: serverTimestamp(),
+            uid: auth.currentUser.uid,
+        });
+
+        showMessage(messageInput.value, auth.currentUser.uid);
+        // Clear the input
+        messageInput.value = "";  
+    }
+}
+
+//this button is to add a new chat
+addChatButton.addEventListener('click', async function(){
+    console.log("adding chat");
+    const chatCollectionRef = collection(db, "chats");
+    // Add an empty doc
+    // addDoc returns a reference to the newly added document
+    const chatDocRef = await addDoc(chatCollectionRef, {name: "Chat Name"});
+    console.log((await getDoc(chatDocRef)).data());
+    const targetEmail = addChatInput.value.trim();
+    const UserSubcollectionRef = collection(chatDocRef, "users");
+    const firstUserRef = doc(UserSubcollectionRef, auth.currentUser.uid);
+    
+    const secondUserUid = await getUidByEmail(targetEmail);
+    
+    if (!secondUserUid) {
+        console.error("No user found with the provided email.");
+        return;
+    }
+    const secondUserRef = doc(UserSubcollectionRef, secondUserUid);
+
+    // Add current user to users subcollection
+    await setDoc(firstUserRef, { uid: auth.currentUser.uid });
+    console.log((await getDoc(firstUserRef)).data());
+    // Add the other user to users subcollection
+    await setDoc(secondUserRef, { uid: secondUserUid });
+    console.log((await getDoc(secondUserRef)).data());
+    addChatInput.value = "";
+    updateFriendDisplay();
+
+
+   
+});
+
+
 
 
 const signOutButton = document.getElementById('sign-out-button');
@@ -138,29 +149,39 @@ async function updateFriendDisplay() {
         sectionContent.innerHTML = "";
 
         snapshot.forEach(async (doc) => {
-            const chatData = doc.data();
             const usersRef = collection(doc.ref, "users");
             const usersSnapshot = await getDocs(usersRef);
             const chatId = doc.id;
-            let otherUserUid = null;
-
+            console.log(chatId);
+            let chatNameUid = null;
+            let isUserInChat = false;
+            usersSnapshot.forEach((userDoc) => {
+                const userData = userDoc.data();
+                if (userData.uid === auth.currentUser.uid) {
+                   isUserInChat = true; 
+                }
+            });
+            if (!isUserInChat){
+                return;
+            }
             // Check for current user and find the other user's UID
             usersSnapshot.forEach((userDoc) => {
                 const userData = userDoc.data();
                 if (userData.uid !== auth.currentUser.uid) {
-                    otherUserUid = userData.uid;
+                    chatNameUid = userData.uid;
                 }
             });
 
-            if (otherUserUid) {
+            if (chatNameUid) {
                 // Retrieve the name of the other user
-                const otherUserName = await getNameByUid(otherUserUid);
+                const otherUserName = await getNameByUid(chatNameUid);
 
                 // Add the user's name to the UI
                 const button = document.createElement("button");
                 button.innerHTML = otherUserName;
                 button.setAttribute("data-chat-id", chatId);
                 button.classList.add("item", "friends");
+                button.addEventListener('click', switchChat(chatId));
                 sectionContent.appendChild(button);
             }
         });
@@ -172,6 +193,7 @@ async function updateFriendDisplay() {
 async function updateAllMessages(chatId){
     const messagesCollection = collection(db, `chats/${chatId}/messages`);
     const messagesQuery = query(messagesCollection, orderBy("timestamp"));
+    chatWindow.textContent = "";
     try {
         const querySnapshot = await getDocs(messagesQuery);
         
@@ -293,4 +315,11 @@ function showMessage(text, uid){
     
     // Scroll to the bottom
     chatWindow.scrollTop = chatWindow.scrollHeight;  
+}
+
+function switchChat(chatId){
+    return async()=>{
+        selectedChatRef = doc(db, "chats", chatId);
+        await updateAllMessages(chatId);
+    }
 }

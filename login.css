@@ -7,6 +7,7 @@ body {
   justify-content: center; 
   align-items: center; 
   height: 100vh; 
+  position: relative;
 }
 
 /* Form container styling for sign-in and sign-up */
@@ -62,7 +63,7 @@ button:hover {
 }
 
 /* Error message styling */
-#error-message {
+.error-message {
   color: red; 
   margin-top: 10px; 
   font-size: 14px; 
